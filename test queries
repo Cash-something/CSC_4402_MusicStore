@@ -1,0 +1,44 @@
+-- Test Queries Section: Purpose is to find verify relationships, integrity, and expected outputs for the MusicStore
+-- View all products with their available formats and quantities(1)
+SELECT 
+    p.Title,
+    p.Artist,
+    f.FormatName,
+    i.Quantity,
+    i.SKU
+FROM Inventory i
+JOIN Products p ON i.ProductID = p.ProductID
+JOIN Formats f ON i.FormatID = f.FormatID;
+
+-- Check total quantity available per product across all formats(2)
+SELECT 
+    p.Title,
+    SUM(i.Quantity) AS TotalStock
+FROM Products p
+JOIN Inventory i ON p.ProductID = i.ProductID
+GROUP BY p.Title
+ORDER BY TotalStock DESC;
+
+-- Find all products that are available as Vinyl(3)
+SELECT 
+    p.Title,
+    p.Artist,
+    f.FormatName
+FROM Products p
+JOIN Inventory i ON p.ProductID = i.ProductID
+JOIN Formats f ON i.FormatID = f.FormatID
+WHERE f.FormatName = 'Vinyl';
+
+-- Count how many formats each artist has available(4)
+SELECT 
+    p.Artist,
+    COUNT(DISTINCT f.FormatName) AS AvailableFormats
+FROM Products p
+JOIN Inventory i ON p.ProductID = i.ProductID
+JOIN Formats f ON i.FormatID = f.FormatID
+GROUP BY p.Artist;
+
+-- Determine the most expensive product/products(5)
+SELECT Title, Artist, Price
+FROM Products
+WHERE Price = (SELECT MAX(Price) FROM Products);
