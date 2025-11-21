@@ -42,16 +42,48 @@ CREATE TABLE Inventory (
 );
 GO
 
+-- customers placing orders
+CREATE TABLE Customers (
+    CustomerID INT IDENTITY(1,1) PRIMARY KEY,
+    FirstName NVARCHAR(50) NOT NULL,
+    LastName NVARCHAR(50) NOT NULL,
+    Email NVARCHAR(100) UNIQUE,
+    Phone NVARCHAR(20),
+    Address NVARCHAR(255)
+);
+GO
 
+-- order information
+CREATE TABLE Orders (
+    OrderID INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerID INT NOT NULL,
+    OrderDate DATETIME DEFAULT GETDATE(),
+    TotalAmount DECIMAL(10, 2) NOT NULL,
+    OrderStatus NVARCHAR(50) DEFAULT 'Pending', -- e.g., 'Pending', 'Shipped', 'Delivered', 'Cancelled'
+    FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+);
+GO
 
--- filler data 
+-- details of each item within an order, linking to the specific product format
+CREATE TABLE OrderItems (
+    OrderItemID INT IDENTITY(1,1) PRIMARY KEY,
+    OrderID INT NOT NULL,
+    InventoryID INT NOT NULL, 
+    Quantity INT NOT NULL,
+    UnitPrice DECIMAL(10, 2) NOT NULL, -- Price at the time of order
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    FOREIGN KEY (InventoryID) REFERENCES Inventory(InventoryID)
+);
+GO
+
+-- filler products
 INSERT INTO Products (Title, Artist, ReleaseDate, Genre, Label, Price)
 VALUES 
 ('The Dark Side of the Moon', 'Pink Floyd', '1973-03-01', 'Rock', 'Harvest', 29.99),
 ('Thriller', 'Michael Jackson', '1982-11-30', 'Pop', 'Epic', 19.99),
 ('Nevermind', 'Nirvana', '1991-09-24', 'Grunge', 'DGC', 24.99);
 
--- more filler data
+-- more filler products
 INSERT INTO Products (Title, Artist, ReleaseDate, Genre, Label, Price)
 VALUES
 ('Rumours', 'Fleetwood Mac', '1977-02-04', 'Rock', 'Warner Bros.', 27.99),
@@ -96,9 +128,37 @@ VALUES
 (17, 1, 10, 'VINYL-017'), (17, 3, 6, 'CAS-017'),
 (18, 1, 5, 'VINYL-018'), (18, 2, 4, 'CD-018');
 
+
+-- filler customers
+INSERT INTO Customers (FirstName, LastName, Email, Phone, Address)
+VALUES 
+('Alice', 'Smith', 'alice.smith@example.com', '555-0101', '123 Main St, Anytown'),
+('Bob', 'Johnson', 'bob.j@example.com', '555-0102', '456 Oak Ave, Otherville');
+GO
+
+-- sample order
+INSERT INTO Orders (CustomerID, TotalAmount, OrderStatus)
+VALUES 
+(1, 79.97, 'Shipped'), -- Alice's Order (CustomerID 1)
+(2, 83.97, 'Pending'); -- Bob's Order (CustomerID 2)
+GO
+
+-- Alice's Order (OrderID 1)
+INSERT INTO OrderItems (OrderID, InventoryID, Quantity, UnitPrice)
+VALUES
+(1, 1, 1, 29.99), 
+(1, 18, 2, 24.99); 
+
+-- Bob's Order (OrderID 2)
+INSERT INTO OrderItems (OrderID, InventoryID, Quantity, UnitPrice)
+VALUES
+(2, 4, 3, 27.99); 
+GO
+
 -- test for data insertion
 SELECT TOP 3* FROM Products;
 
 select * from inventory
+
 
 
