@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Music Store POS System</title>
+    <!-- Link to external CSS stylesheet -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Main heading -->
+      <h1>Music Store - Point of Sale</h1>
+
+      <!-- PRODUCT CATALOG SECTION  -->
+      <!-- This section displays all products from the database in a grid layout -->
+      <div class="catalog-section">
+        <div class="catalog-header">
+          <h2>Product Catalog</h2>
+
+          <!-- Search and filter controls -->
+          <div class="catalog-controls">
+            <!-- Search input for finding products by title, artist, or genre -->
+            <input
+              type="text"
+              id="catalogSearch"
+              placeholder="Search products..."
+            />
+
+            <!-- Filter dropdown to show specific product categories -->
+            <select id="catalogFilter">
+              <option value="all">All Products</option>
+              <option value="vinyl">Vinyl Only</option>
+              <option value="cd">CD Only</option>
+              <option value="cassette">Cassette Only</option>
+              <option value="lowstock">Low Stock (< 10)</option>
+            </select>
+
+            <!-- Refresh button to reload catalog from database -->
+            <button onclick="loadCatalog()" class="refresh-btn">Refresh</button>
+          </div>
+        </div>
+
+        <!-- Grid container where product cards will be dynamically loaded -->
+        <div id="catalogGrid" class="catalog-grid">
+          <!-- Products loaded here by JavaScript -->
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <!-- Main interface buttons for different POS operations -->
+      <div class="action-buttons">
+        <!-- Process Sale: Create orders and complete transactions -->
+        <button onclick="showInterface('order')" class="action-btn order-btn">
+          Process Sale
+        </button>
+
+        <!-- Register Customer: Add new customer to database -->
+        <button
+          onclick="showInterface('customer')"
+          class="action-btn customer-btn"
+        >
+          New Customer
+        </button>
+
+        <!-- Add Product: Add new music products to inventory -->
+        <button onclick="showInterface('add')" class="action-btn add-btn">
+          Add Product
+        </button>
+
+        <!-- Restock: Update inventory quantities -->
+        <button
+          onclick="showInterface('inventory')"
+          class="action-btn inventory-btn"
+        >
+          Restock
+        </button>
+
+        <!-- View Details: See complete product information -->
+        <button onclick="showInterface('view')" class="action-btn view-btn">
+          View Details
+        </button>
+      </div>
+
+      <!-- MODAL WINDOW -->
+      <!-- Pop-up window that displays interface forms when action buttons are clicked -->
+      <div id="interfaceModal" class="modal">
+        <div class="modal-content">
+          <!-- Close button (X) to dismiss modal -->
+          <span class="close" onclick="closeModal()">&times;</span>
+
+          <!-- Container where interface forms will be dynamically loaded -->
+          <div id="modalBody">
+            <!-- Form content loaded here by JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- HIDDEN INTERFACE TEMPLATES  -->
+      <!-- These form templates are hidden and cloned into the modal when needed -->
+      <div id="interfaceTemplates" style="display: none">
+        <!-- INTERFACE 1: PLACE ORDER / CREATE ORDER -->
+        <div id="orderTemplate">
+          <h2>Place Order</h2>
+          <form id="createOrderForm">
+            <!-- Customer selection -->
+            <div class="form-group">
+              <label for="orderCustomerId">Customer ID:</label>
+              <input type="number" id="orderCustomerId" required />
+              <button
+                type="button"
+                class="search-btn"
+                onclick="searchCustomer()"
+              >
+                Search Customer
+              </button>
+            </div>
+
+            <!-- Display customer information after search -->
+            <div class="form-group">
+              <label for="customerInfo">Customer Info:</label>
+              <textarea
+                id="customerInfo"
+                readonly
+                rows="2"
+                style="background: #f0f0f0"
+              ></textarea>
+            </div>
+
+            <!-- Visual separator -->
+            <hr style="margin: 20px 0; border: 1px solid #8b6f47" />
+
+            <!-- Order items section -->
+            <div class="form-group">
+              <label>Items to Purchase:</label>
+              <!-- Container for dynamically added order items -->
+              <div id="orderItemsList"></div>
+              <!-- Button to add more items to the order -->
+              <button type="button" class="search-btn" onclick="addOrderItem()">
+                Add Item
+              </button>
+            </div>
+
+            <!-- Order total (calculated automatically) -->
+            <div class="form-group">
+              <label for="orderTotal">Total Amount:</label>
+              <input
+                type="text"
+                id="orderTotal"
+                readonly
+                style="
+                  background: #f0f0f0;
+                  font-size: 1.3em;
+                  font-weight: bold;
+                  color: #d4a574;
+                "
+                value="$0.00"
+              />
+            </div>
+
+            <!-- Submit button to complete sale -->
+            <button type="submit">Complete Sale</button>
+
+            <!-- Message area for success/error feedback -->
+            <div class="message" id="createOrderMessage"></div>
+          </form>
+        </div>
+
+        <!-- INTERFACE 2: REGISTER NEW CUSTOMER -->
+        <div id="customerTemplate">
+          <h2>Register New Customer</h2>
+          <form id="addCustomerForm">
+            <!-- Customer first name -->
+            <div class="form-group">
+              <label for="firstName">First Name:</label>
+              <input type="text" id="firstName" required />
+            </div>
+
+            <!-- Customer last name -->
+            <div class="form-group">
+              <label for="lastName">Last Name:</label>
+              <input type="text" id="lastName" required />
+            </div>
+
+            <!-- Customer email (must be unique in database) -->
+            <div class="form-group">
+              <label for="email">Email:</label>
+              <input type="email" id="email" required />
+            </div>
+
+            <!-- Customer phone number -->
+            <div class="form-group">
+              <label for="phone">Phone:</label>
+              <input type="text" id="phone" placeholder="555-0123" />
+            </div>
+
+            <!-- Customer address -->
+            <div class="form-group">
+              <label for="address">Address:</label>
+              <textarea id="address" rows="3"></textarea>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit">Register Customer</button>
+
+            <!-- Message area for success/error feedback -->
+            <div class="message" id="addCustomerMessage"></div>
+          </form>
+        </div>
+
+        <!-- INTERFACE 3: ADD NEW PRODUCT -->
+        <div id="addTemplate">
+          <h2>Add New Product</h2>
+          <form id="addProductForm">
+            <!-- Album title -->
+            <div class="form-group">
+              <label for="title">Album Title:</label>
+              <input type="text" id="title" required />
+            </div>
+
+            <!-- Artist name -->
+            <div class="form-group">
+              <label for="artist">Artist:</label>
+              <input type="text" id="artist" required />
+            </div>
+
+            <!-- Release date -->
+            <div class="form-group">
+              <label for="releaseDate">Release Date:</label>
+              <input type="date" id="releaseDate" required />
+            </div>
+
+            <!-- Genre selection -->
+            <div class="form-group">
+              <label for="genre">Genre:</label>
+              <select id="genre" required>
+                <option value="">Select Genre</option>
+                <option value="Rock">Rock</option>
+                <option value="Pop">Pop</option>
+                <option value="Jazz">Jazz</option>
+                <option value="Classical">Classical</option>
+                <option value="Hip-Hop">Hip-Hop</option>
+                <option value="Hard Rock">Hard Rock</option>
+                <option value="Electronic">Electronic</option>
+                <option value="Grunge">Grunge</option>
+                <option value="Alternative">Alternative</option>
+                <option value="Punk">Punk</option>
+              </select>
+            </div>
+
+            <!-- Record label -->
+            <div class="form-group">
+              <label for="label">Record Label:</label>
+              <input type="text" id="label" required />
+            </div>
+
+            <!-- Price -->
+            <div class="form-group">
+              <label for="price">Price ($):</label>
+              <input type="number" id="price" step="0.01" min="0" required />
+            </div>
+
+            <!-- Visual separator -->
+            <hr style="margin: 20px 0; border: 1px solid #8b6f47" />
+
+            <!-- Format selection (Vinyl, CD, Cassette) -->
+            <div class="form-group">
+              <label>Initial Stock - Select Formats:</label>
+              <div class="format-options">
+                <!-- Vinyl checkbox -->
+                <div class="format-option">
+                  <input type="checkbox" id="formatVinyl" value="1" />
+                  <label for="formatVinyl">Vinyl</label>
+                </div>
+                <!-- CD checkbox -->
+                <div class="format-option">
+                  <input type="checkbox" id="formatCD" value="2" />
+                  <label for="formatCD">CD</label>
+                </div>
+                <!-- Cassette checkbox -->
+                <div class="format-option">
+                  <input type="checkbox" id="formatCassette" value="3" />
+                  <label for="formatCassette">Cassette</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quantity inputs (shown when format is checked) -->
+            <div class="form-group" id="vinylQuantity" style="display: none">
+              <label for="vinylQty">Vinyl Quantity:</label>
+              <input type="number" id="vinylQty" min="0" value="0" />
+            </div>
+            <div class="form-group" id="cdQuantity" style="display: none">
+              <label for="cdQty">CD Quantity:</label>
+              <input type="number" id="cdQty" min="0" value="0" />
+            </div>
+            <div class="form-group" id="cassetteQuantity" style="display: none">
+              <label for="cassetteQty">Cassette Quantity:</label>
+              <input type="number" id="cassetteQty" min="0" value="0" />
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit">Add Product to Inventory</button>
+
+            <!-- Message area for success/error feedback -->
+            <div class="message" id="addProductMessage"></div>
+          </form>
+        </div>
+
+        <!-- INTERFACE 4: RESTOCK INVENTORY  -->
+        <div id="inventoryTemplate">
+          <h2>Restock Inventory</h2>
+          <form id="updateInventoryForm">
+            <!-- Product ID (auto-filled from catalog selection) -->
+            <div class="form-group">
+              <label for="invProductId">Product ID:</label>
+              <input
+                type="number"
+                id="invProductId"
+                required
+                readonly
+                style="background: #f0f0f0"
+              />
+            </div>
+
+            <!-- Product name (auto-filled) -->
+            <div class="form-group">
+              <label for="invProductTitle">Product:</label>
+              <input
+                type="text"
+                id="invProductTitle"
+                readonly
+                style="background: #f0f0f0"
+              />
+            </div>
+
+            <!-- Format selection for restocking -->
+            <div class="form-group">
+              <label for="invFormat">Format to Restock:</label>
+              <select id="invFormat" required>
+                <option value="">Select Format</option>
+                <option value="1">Vinyl</option>
+                <option value="2">CD</option>
+                <option value="3">Cassette</option>
+              </select>
+            </div>
+
+            <!-- Current stock level (auto-filled when format selected) -->
+            <div class="form-group">
+              <label for="currentQuantity">Current Stock:</label>
+              <input
+                type="text"
+                id="currentQuantity"
+                readonly
+                style="background: #f0f0f0"
+              />
+            </div>
+
+            <!-- New stock level input -->
+            <div class="form-group">
+              <label for="newQuantity">New Stock Level:</label>
+              <input type="number" id="newQuantity" min="0" required />
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit">Update Stock</button>
+
+            <!-- Message area for success/error feedback -->
+            <div class="message" id="updateInventoryMessage"></div>
+          </form>
+        </div>
+
+        <!-- INTERFACE 5: VIEW PRODUCT DETAILS -->
+        <div id="viewTemplate">
+          <h2>Product Details</h2>
+          <!-- Details container (populated by JavaScript) -->
+          <div id="productDetails" class="product-details-content">
+            <!-- Product information will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Link to external JavaScript file -->
+    <script src="app.js"></script>
+  </body>
+</html>
